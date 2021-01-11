@@ -12,4 +12,165 @@ Prices were fetched from Yahoo Finance, fundamentals are from Nasdaq Financials,
 Goal
 
 Let us build a model based on GRU to predict the closing price of a stock, say of YAHOO.
+# Workflow
 ![](workflow.jpg)
+# Importing Modules
+Let us begin by importing the modules.
+import numpy as np
+import pandas as pd
+from matplotlib import pyplot as plt
+## Loading the data
+The price data for all the stocks are stored in prices-split-adjusted.csv file
+## Filtering YAHOO data
+Let us filter the data related to YAHOO stocks and majorly work on how to predict the closing prices of YAHOO.
+
+#### Note:
+
+head() displays the top 5 rows of the data frame, whereas head(n) displays the top n rows of the data frame.
+
+shape of a data frame returns a tuple with the number of rows and columns of the data frame.
+## Exploring YAHOO data
+Let us explore the data.
+
+- Let us use describe() to view statistical-details about the data.
+
+- Also, let us see if there are any null values in each column of the data using isnull().sum().
+
+Note:
+
+- describe() is a method used on a data frame to view the statistical description of the numerical columns in the data frame.
+
+- isnull() method returns True in the places where there are null values(or missing values) and False if the values are not nulls.
+
+- isnull().sum() displays column-wise information about the number of nulls found in each column of the data frame.
+## Setting the Index for the Data Frame
+Since we are dealing with time-series data, it makes sense to see the date column as the index of our data frame.
+
+We shall do this by using the set_index method on the df_yahoo data frame.
+
+But before that, let us first convert the "date" column into DateTime type using the pd.to_datetime() method of pandas.
+
+#### Note:
+
+- pd.to_datetime() is used to covert the type of column to datetime type.
+
+- set_index() method is used to set the data frame index using existing columns.
+## Setting the Frequency to Business Days
+It is very important for a time series to have a frequency set, so as to consolidate that the data we are working on is free of any missing data.
+
+Since we are working with stock-exchange time-series data, it makes sense to set the frequency of the time-series to business days, meaning the data is recorded for weekdays but not any weekends.
+
+Thanks to pandas, there is a readily available method asfreq() to set the frequency for the time-series.
+
+#### Note:
+
+asfreq() method converts the time-series to specified frequency.
+
+We could pass an argument to the method to denote frequency. For example, df.asfreq('d') implies to set the data to a daily frequency. Similarly,
+
+- 'b' means business days
+
+- '30S' means 30 seconds
+
+## Getting the Dates of Missing Values
+Let us see if the missing values are due to the official holidays of NYSE or due to some other unknown factors.
+
+In case the dates are of official holidays, then those values can't be accounted for as missing. Else, we have to come up with ways to fill those missing values.
+
+So first, let us first filter the null rows and get the dates of these missing values.
+
+#### Note:
+
+any() returns whether any element is True, potentially over an axis.
+
+isnull().any(axis=1) returns a dataframe which contains null values along the rows.
+
+df.index gets the indices of the data frame.
+
+df.index.tolist() returns the list representation of the indexes of the data frame.
+
+## Filtering out the Holidays
+Let us check if the dates of missing values fall in any holidays official for NYSE. A quick check at the NYSE official website would help us know the list of official holidays of NYSE.
+
+Now that we know the list of official holidays for NYSE, we use the calendar module and datetime module to check if a given date in the null_dates list is a holiday or not. We do this by:
+
+- Determining if that week or day name of the date in that month is a holiday or not. For example, Washington's Birthday is celebrated on the third Monday of February.
+- So we extract the week, day, month, year from a given date in null_dates, and check if the day falls between 15 and 21(the possible day range of third Monday) and if the week is Monday.
+- If yes, then it is a holiday. Then we append that date in the holidays list. We took a list of the dates when Good Friday occurs since there is no particular way to determine it.
+
+Finally, after obtaining the entire list of holidays, we filter out the holidays dates from null_dates and store the non-holiday dates in the list non_holidays.
+
+## Getting the Modified Data
+Let us remove the rows that belong to the holidays using the drop() method on the yahoo_data data frame.
+
+#### Note:
+
+drop() metod is used to drop specified labels from rows or columns.
+
+## Filling the Missing Values
+Now that we know that there are two missing values in the data, we have to fill those missing values.
+
+#### Note:
+
+Pandas provides some built-in methods to do this job.
+
+- bfill - used to backward fill or use the next valid observation to fill the missing values in the dataset.
+- ffill - used to forward fill or use the previous valid observation to fill the missing values in the dataset.
+- using fillna(metohd='bfill') is another way of achieving the job using backward filling. Similarly, one could use ffill or any other way like mean().
+Let us use bfill() to fill the two missing values.
+
+## Visualizing YAHOO Data
+Now, let us have a look at how the closing values of YAHOO data look like.
+
+Below defined is the plotter function which extracts the close values, reshapes the data into columnar data, and uses that to plots the data.
+
+## Splitting the Data
+Let us split the closing_stock into 3 parts, for training, validation, and testing purposes.
+
+Let us have 80% of the data in the train set, 10% in the validation set, and the remaining 10% in the test set.
+
+## Feature Scaling
+Let us then use MinMaxScaler, a module from sklearn library to scale the values into the range of 0 and 1. More about it here
+
+We shall do this feature scaling as follows:
+
+- Use fit_transform to transform features by scaling each feature. We shall do this fitting on the train data train_data.
+
+- Then, use the transform method on the same scaler to transform the values of val_data and test_data.
+## Creating the Dataset
+In this exercise, we are going to use GRU, which is one of the quite useful deep learning algorithms to deal with time-series data.
+
+It expects the input data to be three-dimensional. The first dimension indicates the batch size, the second dimension is the timestamps and the third dimension is the number of features.
+
+Let us feed 2 values to predict the next value. To create the data set, let us define the create_dataset function.
+
+In the function, we will be traversing till the last third row of the dataset, combine every two consecutive values as one input, and put the third value as the value to be predicted(ground truth of prediction).
+
+## Building the Model
+Finally, we have reached the modeling part.
+
+As discussed previously, we shall use a GRU based model.
+
+- Firstly, let us import the necessary TensorFlow and Scikit-Learn libraries.
+
+- Next, we shall build the model by adding layers, compiling it, and then fitting the model on the train data.
+
+A bit about the model we are going to build:
+
+- The model we are going to use is a stacked GRU.
+- So the output of one GRU layer should act as the input to the next GRU layer stacked above the former one and so on.
+- We have already discussed that the GRU/LSTM layers in Keras expect the input to be in three-dimensional.
+- Thus, we have to make sure that the output from a previous layer is formatted in a three-dimensional way so as to provide it as input to the next layer.
+- This job could be achieved by setting return_sequences=True in the GRU layers whose output would potentially act as the input to the next GRU layer.
+
+## Evaluating the Model Performance
+Let us now compute the model score on train data, validation data, and test data.
+
+We shall use the model.evaluate() and print the Mean Squared Error and Root Mean Squared Error for each of the train, validation and test sets.
+
+## Visualizing Loss vs Epochs
+Now that we have built the model, let us visualize how the model loss varies with respect to the epoch for the train data and validation data using matplotlib.
+## Visualizing Predictions vs Ground Truths
+Let us now plot the predicted stock prices vs the actual ground truth values.
+
+We shall use model.predict() to get the predicted values of the test data set.
