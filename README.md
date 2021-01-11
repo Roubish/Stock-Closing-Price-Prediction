@@ -12,3 +12,4 @@ Prices were fetched from Yahoo Finance, fundamentals are from Nasdaq Financials,
 Goal
 
 Let us build a model based on GRU to predict the closing price of a stock, say of YAHOO.
+![](workflow.jpg)
